@@ -1,0 +1,19 @@
+{
+    "bdm::Param": {
+        "bound_space": true,
+        "cache_neighbors": true,
+        "detect_static_agents": true,
+        "remove_output_dir_contents": true,
+        "random_seed": 2688649975,
+        "visualize_agents": {
+            "MyNeuron": ["cell_type_"]
+        },
+        "visualize_diffusion": [
+            {
+                "name": "substance_kalium",
+                "concentration": true,
+                "gradient": false
+            }
+        ]
+    }
+}
