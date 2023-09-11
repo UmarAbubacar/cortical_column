@@ -24,12 +24,6 @@ namespace bdm {
 struct SimParam : public ParamGroup {
   BDM_PARAM_GROUP_HEADER(SimParam, 1);
 
-  // Forces: attraction coeff default 1
-  real_t attraction_coeff = 200;
-
-  // Forces: repulsion coeff default 2
-  real_t repulsion_coeff = 300;
-
   // Number of simulation steps
   int sims_steps = 1000;
 
