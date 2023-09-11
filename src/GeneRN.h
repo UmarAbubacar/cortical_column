@@ -28,8 +28,6 @@ struct SingleDivision : public Behavior {
   SingleDivision() {}
   virtual ~SingleDivision() {}
 
-  std::string GetTypeName() { return "SingleDivision"; }
-
   void Run(Agent* agent) override {
     auto* cell = dynamic_cast<MyNeuron*>(agent);
     if (cell->GetDiameter() <= cell->GetThreshold()) {
@@ -40,11 +38,10 @@ struct SingleDivision : public Behavior {
       daughter->SetState(cell->GetState());
 
       // Remove this behavior from the cell
-      cell->RemoveBehavior(cell->GetAllBehaviors()[2]);
-
-      // move on to next stage and remove state behavior
-      cell->SetState(cell->GetState() + 1);
       cell->RemoveBehavior(cell->GetAllBehaviors()[1]);
+
+      // move on to next stage
+      cell->SetState(cell->GetState() + 1);
     }
   }
 };
@@ -54,7 +51,6 @@ struct state : public Behavior {
   state() {}
   explicit state(int cell_type) { state_cell_type_ = cell_type; }
   virtual ~state() {}
-  std::string GetTypeName() { return "state"; }
 
   void Run(Agent* agent) override {
     auto* random = Simulation::GetActive()->GetRandom();
@@ -62,8 +58,10 @@ struct state : public Behavior {
 
     auto* cell = dynamic_cast<MyNeuron*>(agent);
 
-    if (!stage_complete_) {
-      if (random->Uniform(0, 1) < sparam->diff_prob && !adding_next_stage_) {
+    if (cell->GetAllBehaviors().size() < 3) {
+      // check if cell differentiates
+      if (random->Uniform(0, 1) < sparam->diff_prob) {
+        // remove this behavior from the cell
         cell->RemoveBehavior(cell->GetAllBehaviors()[1]);
 
         // set migration substance to MZ height using state_cell_type_ and
@@ -74,29 +72,25 @@ struct state : public Behavior {
           std::cout << "Error: cell type not found in height map" << std::endl;
           exit(1);
         }
-        cell->SetMigrationSubstance(got->second);
-
-        DifferentiatedNeuron* DN = new DifferentiatedNeuron();
-        cell->AddBehavior(DN);
-        cell->AddBehavior(new Chemotaxis("substance_kalium", 3));
+        cell->AddBehavior(new DifferentiatedNeuron());
         cell->SetCellType(state_cell_type_);
-        stage_complete_ = true;
+        
+        cell->SetMigrationSubstance(got->second);
+        cell->AddBehavior(new Chemotaxis("substance_kalium", 3));
 
       } else {
-        adding_next_stage_ = true;
+        // remove this behavior from the cell
+        cell->RemoveBehavior(cell->GetAllBehaviors()[1]);
+
         // added another behavior total of 2 (state, single growth)
-        if (cell->GetAllBehaviors().size() < 3 && !multiplied) {
+        if (cell->GetAllBehaviors().size() < 3) {
           cell->AddBehavior(new SingleDivision());
-          multiplied = true;
         }
       }
     }
   }
 
  private:
-  bool stage_complete_ = false;
-  bool adding_next_stage_ = false;
-  bool multiplied = false;
   int state_cell_type_;
 };
 
@@ -104,8 +98,6 @@ struct SymmetricDivision : public Behavior {
   BDM_BEHAVIOR_HEADER(SymmetricDivision, Behavior, 1);
   SymmetricDivision() { AlwaysCopyToNew(); }
   virtual ~SymmetricDivision() {}
-
-  std::string GetTypeName() { return "SymmetricDivision"; }
 
   void Run(Agent* agent) override {
     auto* cell = dynamic_cast<MyNeuron*>(agent);
